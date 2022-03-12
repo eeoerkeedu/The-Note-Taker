@@ -29,7 +29,7 @@ app.get("/notes", (req, res) =>
 
 // *setting the ends points for CRUD method*
 
-// POST request to add a review
+// POST request to add a note
 app.post("/api/notes", (req, res) => {
 	// Log that a POST request was received
 	console.info(`${req.method} request received to add a note`);
@@ -40,10 +40,10 @@ app.post("/api/notes", (req, res) => {
 	// If all the required properties are present
 	if (title && text) {
 		// Variable for the object we will save
-		const newReview = {
+		const newNote = {
 			title,
 			text,
-			review_id: uuid(),
+			note_id: uuidv4(),
 		};
 
 		// Obtain existing notes
@@ -57,7 +57,7 @@ app.post("/api/notes", (req, res) => {
 				// Add a new note
 				parsedNotes.push(newNote);
 
-				// Write updated reviews back to the file
+				// Write updated notes back to the file
 				fs.writeFile(
 					"./db/db.json",
 					JSON.stringify(parsedNotes, null, 4),
@@ -71,13 +71,13 @@ app.post("/api/notes", (req, res) => {
 
 		const response = {
 			status: "success",
-			body: newReview,
+			body: newNote,
 		};
 
 		console.log(response);
 		res.status(201).json(response);
 	} else {
-		res.status(500).json("Error in posting review");
+		res.status(500).json("Error in posting note");
 	}
 });
 
