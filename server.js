@@ -5,6 +5,7 @@ const db = require("express").Router();
 const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
 const util = require("util");
+const readFromFile = util.promisify(fs.readFile);
 
 // setting port structure
 const PORT = process.env.PORT || 3001;
@@ -27,7 +28,11 @@ app.get("/notes", (req, res) =>
 	res.sendFile(path.join(__dirname, "/public/notes.html"))
 );
 
-// *setting the ends points for CRUD method*
+// setting the ends points for CRUD method //
+
+app.get("/api/notes", (req, res) => {
+	readFromFile("./db/db.json").then((data) => res.json(JSON.parse(data)));
+});
 
 // POST request to add a note
 app.post("/api/notes", (req, res) => {
@@ -43,7 +48,7 @@ app.post("/api/notes", (req, res) => {
 		const newNote = {
 			title,
 			text,
-			note_id: uuidv4(),
+			id: uuidv4(),
 		};
 
 		// Obtain existing notes
@@ -79,6 +84,28 @@ app.post("/api/notes", (req, res) => {
 	} else {
 		res.status(500).json("Error in posting note");
 	}
+});
+
+const writeToFile = (destination, content) =>
+	fs.writeFile(destination, JSON.stringify(content, null, 4), (err) =>
+		err ? console.error(err) : console.info(`\nData written to ${destination}`)
+	);
+
+// DELETE Route for a specific note
+app.delete("/api/notes/:id", (req, res) => {
+	const noteId = req.params.id;
+	readFromFile("./db/db.json")
+		.then((data) => JSON.parse(data))
+		.then((json) => {
+			// Make a new array of all tips except the one with the ID provided in the URL
+			const result = json.filter((notes) => notes.id !== noteId);
+			console.log(noteId);
+			// Save that array to the filesystem
+			writeToFile("./db/db.json", result);
+
+			// Respond to the DELETE request
+			res.json(`Item ${noteId} has been deleted 🗑️`);
+		});
 });
 
 // logs port for local testing and use
