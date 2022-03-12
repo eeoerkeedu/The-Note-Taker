@@ -5,7 +5,13 @@ const db = require("express").Router();
 const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
 const util = require("util");
+
+//some read and write utils to asssit in the delete function
 const readFromFile = util.promisify(fs.readFile);
+const writeToFile = (destination, content) =>
+	fs.writeFile(destination, JSON.stringify(content, null, 4), (err) =>
+		err ? console.error(err) : console.info(`\nData written to ${destination}`)
+	);
 
 // setting port structure
 const PORT = process.env.PORT || 3001;
@@ -86,11 +92,6 @@ app.post("/api/notes", (req, res) => {
 	}
 });
 
-const writeToFile = (destination, content) =>
-	fs.writeFile(destination, JSON.stringify(content, null, 4), (err) =>
-		err ? console.error(err) : console.info(`\nData written to ${destination}`)
-	);
-
 // DELETE Route for a specific note
 app.delete("/api/notes/:id", (req, res) => {
 	const noteId = req.params.id;
@@ -98,9 +99,10 @@ app.delete("/api/notes/:id", (req, res) => {
 		.then((data) => JSON.parse(data))
 		.then((json) => {
 			// Make a new array of all tips except the one with the ID provided in the URL
-			const result = json.filter((notes) => notes.id !== noteId);
-			console.log(noteId);
+			const result = json.filter((title) => title.id !== noteId);
+			console.log(result);
 			// Save that array to the filesystem
+
 			writeToFile("./db/db.json", result);
 
 			// Respond to the DELETE request
